@@ -1,0 +1,20 @@
+[
+  {
+    "name": "تواصل مع الإدارة",
+    "steps": [
+      {
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "فتح نموذج رسالة تُعاد توجيهها للادمن"
+            }
+          }
+        ],
+        "send": {
+          "callback": "contact_admin"
+        }
+      }
+    ]
+  }
+]
