@@ -51,6 +51,8 @@ interface Reminder {
   text: string;
 }
 
+interface LibraryData { subjects: unknown[]; files: unknown[]; }
+
 /**
  * createDurableSessionStorage — a grammY StorageAdapter that routes each session
  * key to its own ChatDO instance. Pass to buildBot({ storage }) in the Worker.
@@ -140,6 +142,18 @@ export class ChatDO {
       }
       if (request.method === "DELETE") {
         await this.state.storage.delete("session");
+        return new Response(null, { status: 204 });
+      }
+    }
+
+    // Global library records use this named object ("study-library"). Lists are
+    // read from the stored subject/file indexes; no Redis/Durable Object key scan.
+    if (url.pathname === "/library") {
+      if (request.method === "GET") {
+        return Response.json((await this.state.storage.get<LibraryData>("library")) ?? { subjects: [], files: [] });
+      }
+      if (request.method === "PUT") {
+        await this.state.storage.put("library", await request.json());
         return new Response(null, { status: 204 });
       }
     }

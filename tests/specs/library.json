@@ -1,0 +1,13 @@
+[
+  {
+    "name": "الإدارة غير متاحة لغير المالك",
+    "steps": [
+      {
+        "send": { "callback": "admin:open" },
+        "expect": [
+          { "method": "sendMessage", "payload": { "text": "صلاحية الإدارة غير مُعدّة بعد." } }
+        ]
+      }
+    ]
+  }
+]

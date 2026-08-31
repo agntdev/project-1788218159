@@ -5,9 +5,9 @@
       {
         "expect": [
           {
-            "method": "sendMessage",
+            "method": "editMessageText",
             "payload": {
-              "text": "فتح قائمة المواد الأدبية مع أزرار قابلة للتمرير"
+              "text": "المكتبة ليست جاهزة الآن. جرّب مرة أخرى بعد قليل."
             }
           }
         ],
