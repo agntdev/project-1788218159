@@ -31,7 +31,7 @@ export type OwnerAwareCtx = {
   env?: Record<string, unknown> | null;
   from?: { id: number } | undefined;
   chat?: { id: number } | undefined;
-  reply: (text: string, ...args: unknown[]) => unknown | Promise<unknown>;
+  reply: (...args: any[]) => unknown | Promise<unknown>;
   answerCallbackQuery?: (
     opts?: { text?: string; show_alert?: boolean },
   ) => unknown | Promise<unknown>;
@@ -69,25 +69,21 @@ function nodeProcessEnv(): Record<string, unknown> | undefined {
  * Platform-injected owner/admin chat id, or `undefined` if unset.
  * Prefer `ctx.env` (Workers); fall back to `process.env` only for Node/harness.
  */
-export function adminChatId(ctx: {
-  env?: Record<string, unknown> | null;
-}): string | undefined {
+export function adminChatId(ctx: object): string | undefined {
+  const env = (ctx as { env?: Record<string, unknown> | null }).env;
   return (
-    readAdminFromEnv(ctx.env ?? undefined) ?? readAdminFromEnv(nodeProcessEnv())
+    readAdminFromEnv(env ?? undefined) ?? readAdminFromEnv(nodeProcessEnv())
   );
 }
 
 /** True when the update's user (or private chat) matches the injected owner id. */
-export function isOwner(ctx: {
-  env?: Record<string, unknown> | null;
-  from?: { id: number } | undefined;
-  chat?: { id: number } | undefined;
-}): boolean {
+export function isOwner(ctx: object): boolean {
+  const identity = ctx as { from?: { id: number }; chat?: { id: number } };
   const admin = adminChatId(ctx);
   if (admin === undefined) return false;
-  if (ctx.from?.id !== undefined && String(ctx.from.id) === admin) return true;
+  if (identity.from?.id !== undefined && String(identity.from.id) === admin) return true;
   // Private chats: chat id equals user id — notify targets often use chat id.
-  if (ctx.chat?.id !== undefined && String(ctx.chat.id) === admin) return true;
+  if (identity.chat?.id !== undefined && String(identity.chat.id) === admin) return true;
   return false;
 }
 
@@ -96,13 +92,16 @@ export function isOwner(ctx: {
  * On deny: answers callback (when present) and replies in plain language.
  * Does not throw — callers should `return` when this is false.
  */
-export async function requireOwner(ctx: OwnerAwareCtx): Promise<boolean> {
+export async function requireOwner(
+  ctx: OwnerAwareCtx,
+  copy?: { unset?: string; denied?: string },
+): Promise<boolean> {
   if (isOwner(ctx)) return true;
 
   const unset = adminChatId(ctx) === undefined;
   const text = unset
-    ? "Owner access isn't set up yet."
-    : "Only the owner can do that.";
+    ? (copy?.unset ?? "Owner access isn't set up yet.")
+    : (copy?.denied ?? "Only the owner can do that.");
 
   try {
     if (ctx.answerCallbackQuery) {
